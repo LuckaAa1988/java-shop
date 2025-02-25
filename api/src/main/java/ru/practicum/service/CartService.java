@@ -1,6 +1,5 @@
 package ru.practicum.service;
 
-import org.springframework.http.ResponseEntity;
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.CartResponse;

@@ -7,12 +7,21 @@ services:
       - "9090:9090"
     depends_on:
       - shop-db
+    volumes:
+      - ./uploads/images:/uploads/images
     environment:
       - DB_NAME=shop
       - POSTGRES_USER=shopuser
       - POSTGRES_PASSWORD=12345
       - DB_HOST=shop-db
       - DB_PORT=5432
+  shop-view:
+    build: view
+    container_name: view_container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - shop-api
 
   shop-db:
     container_name: api_db_container

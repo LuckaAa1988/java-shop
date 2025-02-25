@@ -10,6 +10,17 @@
 <nav class="navbar navbar-light bg-light">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">Магазин</a>
+        <div class="d-flex">
+            <a th:href="@{/products/add}" class="btn btn-outline-secondary me-2">Добавить продукт</a>
+            <a th:href="@{/orders}" class="btn btn-outline-secondary me-2">📦 Мои заказы</a>
+            <a th:href="@{/cart}" class="btn btn-outline-primary position-relative">
+                🛒 Корзина
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      th:text="${cartItemCount}">
+                    0
+                </span>
+            </a>
+        </div>
     </div>
 </nav>
 
@@ -33,7 +44,7 @@
             </thead>
             <tbody>
             <tr th:each="product : ${cart.products}">
-                <td><img th:src="${product.product.image}" alt="Товар" width="50"></td>
+                <td><img th:src="@{'http://localhost:9090' + ${product.product.image}}" alt="Товар" width="50"></td>
                 <td>
                     <a th:href="@{/product/{id}(id=${product.product.id})}" th:text="${product.product.name}"></a>
                 </td>

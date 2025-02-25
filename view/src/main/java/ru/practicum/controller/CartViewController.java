@@ -4,7 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.client.CartClient;
 
 
@@ -46,7 +49,14 @@ public class CartViewController {
         model.addAttribute("sum", cart.getProducts().stream()
                 .mapToDouble(c -> c.getProduct().getPrice() * c.getQuantity())
                 .sum());
+        model.addAttribute("cartItemCount", cartClient.getCart().getProducts().size());
         return "cart";
+    }
+
+    @PostMapping("/checkout")
+    public String createOrder() {
+        var order = cartClient.createOrder();
+        return "redirect:/orders/" + order.getOrderId();
     }
 
 }

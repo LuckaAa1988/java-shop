@@ -11,6 +11,8 @@
     <div class="container-fluid">
         <a class="navbar-brand" href="/">Магазин</a>
         <div class="d-flex">
+            <a th:href="@{/products/add}" class="btn btn-outline-secondary me-2">Добавить продукт</a>
+            <a th:href="@{/orders}" class="btn btn-outline-secondary me-2">📦 Мои заказы</a>
             <a th:href="@{/cart}" class="btn btn-outline-primary position-relative">
                 🛒 Корзина
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
@@ -56,7 +58,7 @@
         <div class="col-md-4 mb-4" th:each="product : ${products}">
             <div class="card">
                 <a th:href="@{/products/{id}(id=${product.id})}">
-                    <img th:src="${product.image}" class="card-img-top" alt="Изображение товара">
+                    <img th:src="@{'http://localhost:9090' + ${product.image}}" class="card-img-top" alt="Изображение товара">
                 </a>
                 <div class="card-body">
                     <h5 class="card-title">

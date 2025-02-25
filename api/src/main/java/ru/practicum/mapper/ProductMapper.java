@@ -16,28 +16,4 @@ import java.util.stream.Collectors;
 public interface ProductMapper {
     ProductShortResponse toShortDto(Product product);
     ProductFullResponse toFullDto(Product product);
-
-    default Map<ProductShortResponse, Integer> mapProductCartQuantityListToMap(List<ProductCart> products) {
-        if (products == null) {
-            return Collections.emptyMap();
-        }
-
-        return products.stream()
-                .collect(Collectors.toMap(
-                        pcq -> toShortDto(pcq.getProduct()),
-                        ProductCart::getQuantity
-                ));
-    }
-
-    default Map<ProductShortResponse, Integer> mapProductOrderQuantityListToMap(List<ProductOrder> products) {
-        if (products == null) {
-            return Collections.emptyMap();
-        }
-
-        return products.stream()
-                .collect(Collectors.toMap(
-                        pcq -> toShortDto(pcq.getProduct()),
-                        ProductOrder::getQuantity
-                ));
-    }
 }

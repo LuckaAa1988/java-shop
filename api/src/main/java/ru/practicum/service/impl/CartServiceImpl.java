@@ -31,7 +31,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartResponse getCart(Long id) throws CartNotFoundException {
         return cartMapper.toDto(cartRepository.findById(id).orElseThrow(
-                () -> new CartNotFoundException(String.format("Корзины с id %s не существует", id))), productMapper);
+                () -> new CartNotFoundException(String.format("Корзины с id %s не существует", id))));
     }
 
     @Override
@@ -57,7 +57,7 @@ public class CartServiceImpl implements CartService {
                         .build());
         productCart.setQuantity(quantity);
         productCartRepository.save(productCart);
-        return cartMapper.toDto(cart, productMapper);
+        return cartMapper.toDto(cart);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class CartServiceImpl implements CartService {
                 .build()).orElseThrow(
                         () -> new CartNotFoundException(String.format("Корзины с id %s не существует", cartId)));
         productCartRepository.delete(productCart);
-        return cartMapper.toDto(cart, productMapper);
+        return cartMapper.toDto(cart);
     }
 
     @Override

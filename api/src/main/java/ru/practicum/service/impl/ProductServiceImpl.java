@@ -21,7 +21,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
-import static ru.practicum.repository.ProductSpecification.*;
+import static ru.practicum.repository.ProductSpecification.byText;
+import static ru.practicum.repository.ProductSpecification.orderBy;
 
 @Service
 @RequiredArgsConstructor
@@ -54,14 +55,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductFullResponse addProduct(String name, String description, Double price, MultipartFile image) throws IOException {
-        String key = UUID.randomUUID().toString();
-
-        Path filePath = Paths.get("uploads/images/" + key);
+        String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+        Path filePath = Paths.get("uploads/images/" + fileName);
 
         Files.createDirectories(filePath.getParent());
         Files.write(filePath, image.getBytes());
 
-        String imageUrl = "/images/" + key;
+        String imageUrl = "/images/" + fileName;
 
         var product = Product.builder()
                 .name(name)
@@ -71,6 +71,6 @@ public class ProductServiceImpl implements ProductService {
                 .build();
 
         productRepository.save(product);
-        return productMapper.toFullDto(product); //TODO
+        return productMapper.toFullDto(product);
     }
 }

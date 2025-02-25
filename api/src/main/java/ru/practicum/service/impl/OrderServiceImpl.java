@@ -7,7 +7,6 @@ import ru.practicum.entity.ProductOrder;
 import ru.practicum.entity.ProductOrderId;
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.OrderNotFoundException;
-import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.mapper.OrderMapper;
 import ru.practicum.mapper.ProductMapper;
 import ru.practicum.repository.CartRepository;
@@ -39,8 +38,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderFullResponse findById(Long orderId) throws OrderNotFoundException {
         return orderMapper.toDto(orderRepository.findById(orderId).orElseThrow(
-                () -> new OrderNotFoundException(String.format("Товара с id %s не существует", orderId))
-        ), productMapper);
+                () -> new OrderNotFoundException(String.format("Товара с id %s не существует", orderId))));
     }
 
     @Override
@@ -68,6 +66,6 @@ public class OrderServiceImpl implements OrderService {
 
         order.setProducts(products);
 
-        return orderMapper.toDto(order, productMapper);
+        return orderMapper.toDto(order);
     }
 }

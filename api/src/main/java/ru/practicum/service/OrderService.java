@@ -2,7 +2,6 @@ package ru.practicum.service;
 
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.OrderNotFoundException;
-import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.OrderFullResponse;
 import ru.practicum.response.OrderShortResponse;
 

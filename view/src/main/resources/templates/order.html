@@ -1,10 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Заказ</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
+
+<nav class="navbar navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Магазин</a>
+        <div class="d-flex">
+            <a th:href="@{/products/add}" class="btn btn-outline-secondary me-2">Добавить продукт</a>
+            <a th:href="@{/orders}" class="btn btn-outline-secondary me-2">📦 Мои заказы</a>
+            <a th:href="@{/cart}" class="btn btn-outline-primary position-relative">
+                🛒 Корзина
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      th:text="${cartItemCount}">
+                    0
+                </span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2>Заказ №<span th:text="${order.orderId}"></span></h2>
+
+    <div th:if="${order.products.isEmpty()}">
+        <p>Этот заказ пуст.</p>
+    </div>
+
+    <div th:unless="${order.products.isEmpty()}">
+        <div class="row">
+            <div class="col-md-4 mb-4" th:each="item : ${order.products}">
+                <div class="card">
+                    <img th:src="@{'http://localhost:9090' + ${item.product.image}}" class="card-img-top" alt="Изображение товара">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a th:href="@{/products/{id}(id=${item.product.id})}" th:text="${item.product.name}"></a>
+                        </h5>
+                        <p class="card-text">Цена: <span th:text="${item.product.price}"></span> ₽</p>
+                        <p class="card-text">Количество: <span th:text="${item.quantity}"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="/orders" class="btn btn-secondary mt-3">Назад к заказам</a>
+</div>
 
 </body>
 </html>

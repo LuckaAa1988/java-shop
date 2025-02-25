@@ -3,8 +3,8 @@ package ru.practicum.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Builder
@@ -12,6 +12,6 @@ import java.util.Map;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderFullResponse {
-    Long id;
-    Map<ProductShortResponse, Integer> products = new HashMap<>();
+    Long orderId;
+    List<CartItem> products = new ArrayList<>();
 }

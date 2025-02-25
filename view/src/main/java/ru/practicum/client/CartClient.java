@@ -3,8 +3,9 @@ package ru.practicum.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.response.CartResponse;
+import ru.practicum.response.OrderFullResponse;
 
-@FeignClient(name = "cart-service", url = "http://localhost:9090")
+@FeignClient(name = "cart-service", url = "http://shop-api:9090")
 public interface CartClient {
 
     @PostMapping("/api/carts/1/add-product/{productId}")
@@ -16,4 +17,7 @@ public interface CartClient {
 
     @GetMapping("/api/carts/1")
     CartResponse getCart();
+
+    @PostMapping("/api/orders/cart/1")
+    OrderFullResponse createOrder();
 }

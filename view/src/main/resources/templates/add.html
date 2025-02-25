@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить продукт</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const output = document.getElementById('imagePreview');
+                output.src = reader.result;
+                output.style.display = "block";
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
+</head>
+<body>
+<nav class="navbar navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Магазин</a>
+        <div class="d-flex">
+            <a th:href="@{/products/add}" class="btn btn-outline-secondary me-2">Добавить продукт</a>
+            <a th:href="@{/orders}" class="btn btn-outline-secondary me-2">📦 Мои заказы</a>
+            <a th:href="@{/cart}" class="btn btn-outline-primary position-relative">
+                🛒 Корзина
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      th:text="${cartItemCount}">0</span>
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="container mt-4">
+
+    <h1 class="text-center">Добавить продукт</h1>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form th:action="@{/products}" method="post" th:object="${product}" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Название:</label>
+                    <input type="text" id="name" th:field="*{name}" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="image" class="form-label">Изображение:</label>
+                    <input type="file" id="image" th:field="*{image}" accept="image/*" class="form-control" onchange="previewImage(event)" required />
+                    <img id="imagePreview" style="display: none; margin-top: 10px; max-width: 100%;"/>
+                </div>
+
+                <div class="mb-3">
+                    <label for="text" class="form-label">Описание:</label>
+                    <textarea id="text" th:field="*{description}" class="form-control" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="price" class="form-label">Цена:</label>
+                    <input type="number" id="price" th:field="*{price}" class="form-control" required />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Добавить</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
