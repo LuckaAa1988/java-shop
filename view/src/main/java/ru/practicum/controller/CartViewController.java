@@ -56,6 +56,7 @@ public class CartViewController {
     @PostMapping("/checkout")
     public String createOrder() {
         var order = cartClient.createOrder();
+        cartClient.deleteAllFromCart();
         return "redirect:/orders/" + order.getOrderId();
     }
 

@@ -26,7 +26,6 @@ public class CartServiceImpl implements CartService {
     private final ProductRepository productRepository;
     private final ProductCartRepository productCartRepository;
     private final CartMapper cartMapper;
-    private final ProductMapper productMapper;
 
     @Override
     public CartResponse getCart(Long id) throws CartNotFoundException {
@@ -76,6 +75,6 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void deleteCart(Long cartId) {
-        cartRepository.deleteById(cartId);
+        productCartRepository.deleteAll();
     }
 }

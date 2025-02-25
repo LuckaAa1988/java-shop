@@ -8,7 +8,6 @@ import ru.practicum.entity.ProductOrderId;
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.OrderNotFoundException;
 import ru.practicum.mapper.OrderMapper;
-import ru.practicum.mapper.ProductMapper;
 import ru.practicum.repository.CartRepository;
 import ru.practicum.repository.OrderRepository;
 import ru.practicum.repository.ProductOrderRepository;
@@ -28,7 +27,6 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final ProductOrderRepository productOrderRepository;
     private final OrderMapper orderMapper;
-    private final ProductMapper productMapper;
 
     @Override
     public List<OrderShortResponse> findAll() {

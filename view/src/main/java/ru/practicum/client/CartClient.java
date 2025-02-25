@@ -20,4 +20,7 @@ public interface CartClient {
 
     @PostMapping("/api/orders/cart/1")
     OrderFullResponse createOrder();
+
+    @DeleteMapping("/api/carts/1")
+    void deleteAllFromCart();
 }
