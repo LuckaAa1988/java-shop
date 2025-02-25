@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  shop-api:
+    build: api
+    container_name: api_container
+    ports:
+      - "9090:9090"
+    depends_on:
+      - shop-db
+    environment:
+      - DB_NAME=shop
+      - POSTGRES_USER=shopuser
+      - POSTGRES_PASSWORD=12345
+      - DB_HOST=shop-db
+      - DB_PORT=5432
+
+  shop-db:
+    container_name: api_db_container
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - /var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=shop
+      - POSTGRES_USER=shopuser
+      - POSTGRES_PASSWORD=12345

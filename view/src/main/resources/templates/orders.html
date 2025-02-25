@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="col-md-4 mb-4" th:each="order : ${orders}">
+    <div class="card">
+        <h5 th:href="@{/orders/{id}(id=${order.id})}" th:text="${order.id}">1</h5>
+        <div class="card-body">
+            <h5 class="card-title" th:text="${order.sum}">
+            </h5>
+        </div>
+    </div>
+</div>
+</div>
+</body>
+</html>
