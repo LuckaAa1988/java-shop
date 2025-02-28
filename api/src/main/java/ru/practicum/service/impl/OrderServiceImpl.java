@@ -36,7 +36,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderFullResponse findById(Long orderId) throws OrderNotFoundException {
         return orderMapper.toDto(orderRepository.findById(orderId).orElseThrow(
-                () -> new OrderNotFoundException(String.format("Товара с id %s не существует", orderId))));
+                () -> new OrderNotFoundException(String.format("Заказа с id %s не существует", orderId))));
     }
 
     @Override

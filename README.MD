@@ -27,7 +27,7 @@
    cd java-shop
 3. Установите зависимости:
     ```bash
-   mvn clean package
+   mvn clean package -DskipTests
 4. Запустите приложение:
     ```bash
    docker compose up --build
