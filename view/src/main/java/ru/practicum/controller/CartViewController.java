@@ -1,13 +1,14 @@
 package ru.practicum.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.practicum.client.CartClient;
 
 
@@ -18,46 +19,65 @@ public class CartViewController {
 
     private final CartClient cartClient;
 
-
-    @PostMapping("/add")
-    public String addToCart(@RequestParam("productId") Long productId,
-                            @RequestParam("quantity") Integer quantity,
-                            HttpServletRequest request) {
-        cartClient.addProductToCart(productId, quantity);
-        String referer = request.getHeader("Referer");
-        if (referer.contains("cart") || referer.contains("products")) {
-            return "redirect:/cart";
-        }
-        else return "redirect:/";
+    @PostMapping(value = "/add")
+    public Mono<String> addToCart(ServerWebExchange exchange) {
+        return exchange.getFormData()
+                .flatMap(formData -> {
+                    Long productId = Long.valueOf(formData.getFirst("productId"));
+                    Integer quantity = Integer.valueOf(formData.getFirst("quantity"));
+                    return cartClient.addProductToCart(productId, quantity)
+                            .thenReturn("redirect:/cart");
+                });
     }
 
+
     @PostMapping("/remove")
-    public String removeFromCart(@RequestParam("productId") Long productId,
-                                 HttpServletRequest request) {
-        cartClient.removeProductFromCart(productId);
-        String referer = request.getHeader("Referer");
-        if (referer.contains("cart") || referer.contains("products")) {
-            return "redirect:/cart";
-        }
-        else return "redirect:/";
+    public Mono<String> removeFromCart(ServerWebExchange exchange) {
+        return exchange.getFormData()
+                .flatMap(formData -> {
+                    Long productId = Long.valueOf(formData.getFirst("productId"));
+                    return cartClient.removeProductFromCart(productId)
+                            .thenReturn("redirect:/cart");
+                });
+    }
+
+    @PostMapping("/update")
+    public Mono<String> updateCart(ServerWebExchange exchange) {
+        return exchange.getFormData()
+                .flatMap(formData -> {
+                    Long productId = Long.valueOf(formData.getFirst("productId"));
+                    Integer quantity = Integer.valueOf(formData.getFirst("quantity"));
+                    return cartClient.updateProductInCart(productId, quantity)
+                            .thenReturn("redirect:/cart");
+                });
     }
 
     @GetMapping
-    public String cartPage(Model model) {
+    public Mono<String> cartPage(Model model) {
         var cart = cartClient.getCart();
-        model.addAttribute("cart", cart);
-        model.addAttribute("sum", cart.getProducts().stream()
-                .mapToDouble(c -> c.getProduct().getPrice() * c.getQuantity())
-                .sum());
-        model.addAttribute("cartItemCount", cartClient.getCart().getProducts().size());
-        return "cart";
+
+        var cartItemCountMono = cartClient.getCart()
+                .map(cartResponse -> cartResponse.getProducts().size());
+
+        var sumMono = cart
+                .flatMapMany(cartResponse -> Flux.fromIterable(cartResponse.getProducts()))
+                .map(cartItem -> cartItem.getProduct().getPrice() * cartItem.getQuantity())
+                .reduce(0.0, Double::sum);
+
+        return Mono.zip(cart, sumMono, cartItemCountMono)
+                .doOnNext(tuple -> {
+                    model.addAttribute("cart", tuple.getT1());
+                    model.addAttribute("sum", tuple.getT2());
+                    model.addAttribute("cartItemCount", tuple.getT3());
+                })
+                .thenReturn("cart");
     }
 
     @PostMapping("/checkout")
-    public String createOrder() {
-        var order = cartClient.createOrder();
-        cartClient.deleteAllFromCart();
-        return "redirect:/orders/" + order.getOrderId();
+    public Mono<String> createOrder() {
+        return cartClient.createOrder()
+                .flatMap(order -> cartClient.deleteAllFromCart()
+                        .thenReturn(order))
+                .map(order -> "redirect:/orders/" + order.getOrderId());
     }
-
 }

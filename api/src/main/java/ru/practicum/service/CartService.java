@@ -1,15 +1,18 @@
 package ru.practicum.service;
 
+import reactor.core.publisher.Mono;
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.CartResponse;
 
 public interface CartService {
-    CartResponse getCart(Long id) throws CartNotFoundException;
+    Mono<CartResponse> getCart(Long id);
 
-    CartResponse addProductToCart(Long cartId, Long productId, Integer quantity) throws ProductNotFoundException;
+    Mono<CartResponse> addProductToCart(Long cartId, Long productId, Integer quantity);
 
-    CartResponse deleteProductFromCart(Long cartId, Long productId) throws CartNotFoundException;
+    Mono<CartResponse> deleteProductFromCart(Long cartId, Long productId);
 
-    void deleteCart(Long cartId);
+    Mono<Void> deleteCart(Long cartId);
+
+    Mono<CartResponse> update(Long cartId, Long productId, Integer quantity);
 }

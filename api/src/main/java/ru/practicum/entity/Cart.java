@@ -1,13 +1,13 @@
 package ru.practicum.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.sql.Timestamp;
-import java.util.List;
+import java.time.OffsetDateTime;
 
-@Entity
 @Getter
 @Setter
 @Builder
@@ -17,9 +17,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Cart {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long cartId;
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ProductCart> products;
-    Timestamp createdOn;
+    OffsetDateTime createdOn;
 }

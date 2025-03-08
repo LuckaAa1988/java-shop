@@ -46,11 +46,11 @@
             <tr th:each="product : ${cart.products}">
                 <td><img th:src="@{'http://localhost:9090' + ${product.product.image}}" alt="Товар" width="50"></td>
                 <td>
-                    <a th:href="@{/product/{id}(id=${product.product.id})}" th:text="${product.product.name}"></a>
+                    <a th:href="@{/products/{id}(id=${product.product.id})}" th:text="${product.product.name}"></a>
                 </td>
                 <td th:text="${product.product.price} + ' ₽'"></td>
                 <td>
-                    <form th:action="@{/cart/add}" method="post">
+                    <form th:action="@{/cart/update}" method="post">
                         <input type="hidden" name="productId" th:value="${product.product.id}">
                         <input type="number" name="quantity" th:value="${product.quantity}" min="1" class="form-control w-50 d-inline">
                         <button type="submit" class="btn btn-primary btn-sm">Обновить</button>

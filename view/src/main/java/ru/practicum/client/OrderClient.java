@@ -1,19 +1,30 @@
 package ru.practicum.client;
 
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.practicum.response.OrderFullResponse;
 import ru.practicum.response.OrderShortResponse;
 
-import java.util.List;
+@RequiredArgsConstructor
+@Component
+public class OrderClient {
 
-@FeignClient(name = "order-service", url = "http://shop-api:9090")
-public interface OrderClient {
+    private final WebClient webClient;
 
-    @GetMapping("/api/orders")
-    List<OrderShortResponse> findAll();
+    public Flux<OrderShortResponse> findAll() {
+        return webClient.get()
+                .uri("/api/orders")
+                .retrieve()
+                .bodyToFlux(OrderShortResponse.class);
+    }
 
-    @GetMapping("/api/orders/{orderId}")
-    OrderFullResponse findById(@PathVariable Long orderId);
+    public Mono<OrderFullResponse> findById(Long orderId) {
+        return webClient.get()
+                .uri("/api/orders/{orderId}", orderId)
+                .retrieve()
+                .bodyToMono(OrderFullResponse.class);
+    }
 }

@@ -1,26 +1,59 @@
 package ru.practicum.client;
 
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import ru.practicum.response.CartResponse;
 import ru.practicum.response.OrderFullResponse;
 
-@FeignClient(name = "cart-service", url = "http://shop-api:9090")
-public interface CartClient {
+@RequiredArgsConstructor
+@Component
+public class CartClient {
 
-    @PostMapping("/api/carts/1/add-product/{productId}")
-    void addProductToCart(@PathVariable Long productId,
-                          @RequestParam Integer quantity);
+    private final WebClient webClient;
 
-    @DeleteMapping("/api/carts/1/delete-product/{productId}")
-    void removeProductFromCart(@PathVariable Long productId);
+    public Mono<CartResponse> addProductToCart(Long productId,
+                                               Integer quantity) {
+        return webClient.post()
+                .uri("/api/carts/1/add-product/{productId}?quantity={quantity}", productId, quantity)
+                .retrieve()
+                .bodyToMono(CartResponse.class);
+    }
 
-    @GetMapping("/api/carts/1")
-    CartResponse getCart();
+    public Mono<CartResponse> removeProductFromCart(Long productId) {
+        return webClient.delete()
+                .uri("/api/carts/1/delete-product/{productId}", productId)
+                .retrieve()
+                .bodyToMono(CartResponse.class);
+    }
 
-    @PostMapping("/api/orders/cart/1")
-    OrderFullResponse createOrder();
+    public Mono<CartResponse> getCart() {
+        return webClient.get()
+                .uri("/api/carts/1")
+                .retrieve()
+                .bodyToMono(CartResponse.class);
+    }
 
-    @DeleteMapping("/api/carts/1")
-    void deleteAllFromCart();
+    public Mono<OrderFullResponse> createOrder() {
+        return webClient.post()
+                .uri("/api/orders/cart/1")
+                .retrieve()
+                .bodyToMono(OrderFullResponse.class);
+    }
+
+    public Mono<Void> deleteAllFromCart() {
+        return webClient.delete()
+                .uri("/api/carts/1")
+                .retrieve()
+                .bodyToMono(Void.class);
+    }
+
+    public Mono<CartResponse> updateProductInCart(Long productId,
+                                               Integer quantity) {
+        return webClient.patch()
+                .uri("/api/carts/1/update-product/{productId}?quantity={quantity}", productId, quantity)
+                .retrieve()
+                .bodyToMono(CartResponse.class);
+    }
 }

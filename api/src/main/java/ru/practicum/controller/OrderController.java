@@ -3,6 +3,8 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.OrderNotFoundException;
 import ru.practicum.response.OrderFullResponse;
@@ -19,17 +21,17 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping
-    public ResponseEntity<List<OrderShortResponse>> findAll() {
-        return ResponseEntity.ok(orderService.findAll());
+    public Flux<OrderShortResponse> findAll() {
+        return orderService.findAll();
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderFullResponse> findById(@PathVariable Long orderId) throws OrderNotFoundException {
-        return ResponseEntity.ok(orderService.findById(orderId));
+    public Mono<OrderFullResponse> findById(@PathVariable Long orderId) throws OrderNotFoundException {
+        return orderService.findById(orderId);
     }
 
     @PostMapping("/cart/{cartId}")
-    public ResponseEntity<OrderFullResponse> createOrder(@PathVariable Long cartId) throws CartNotFoundException {
-        return ResponseEntity.ok(orderService.createOrder(cartId));
+    public Mono<OrderFullResponse> createOrder(@PathVariable Long cartId) throws CartNotFoundException {
+        return orderService.createOrder(cartId);
     }
 }

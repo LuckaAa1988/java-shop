@@ -1,9 +1,8 @@
 server:
   port: 9090
 spring:
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://shop-db:5432/shop
+  r2dbc:
+    url: r2dbc:postgresql://shop-db:5432/shop
     username: shopuser
     password: 12345
   jpa:

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.CartResponse;
@@ -17,26 +18,32 @@ public class CartController {
     private final CartService cartService;
 
     @PostMapping("/{cartId}/add-product/{productId}")
-    public ResponseEntity<CartResponse> addProductToCart(@PathVariable Long cartId,
-                                                         @PathVariable Long productId,
-                                                         @RequestParam Integer quantity) throws ProductNotFoundException {
-        return ResponseEntity.ok(cartService.addProductToCart(cartId, productId, quantity));
+    public Mono<CartResponse> addProductToCart(@PathVariable Long cartId,
+                                               @PathVariable Long productId,
+                                               @RequestParam Integer quantity) {
+        return cartService.addProductToCart(cartId, productId, quantity);
     }
 
     @DeleteMapping("/{cartId}/delete-product/{productId}")
-    public ResponseEntity<CartResponse> deleteProductFromCart(@PathVariable Long cartId,
-                                                              @PathVariable Long productId) throws CartNotFoundException {
-        return ResponseEntity.ok(cartService.deleteProductFromCart(cartId, productId));
+    public Mono<CartResponse> deleteProductFromCart(@PathVariable Long cartId,
+                                                              @PathVariable Long productId) {
+        return cartService.deleteProductFromCart(cartId, productId);
     }
 
     @GetMapping("/{cartId}")
-    public ResponseEntity<CartResponse> getCart(@PathVariable Long cartId) throws CartNotFoundException {
-        return ResponseEntity.ok(cartService.getCart(cartId));
+    public Mono<CartResponse> getCart(@PathVariable Long cartId) {
+        return cartService.getCart(cartId);
     }
 
     @DeleteMapping("/{cartId}")
-    public ResponseEntity<Void> deleteCart(@PathVariable Long cartId) {
-        cartService.deleteCart(cartId);
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public Mono<Void> deleteCart(@PathVariable Long cartId) {
+        return cartService.deleteCart(cartId);
+    }
+
+    @PatchMapping("/{cartId}/update-product/{productId}")
+    public Mono<CartResponse> updateProductInCart(@PathVariable Long cartId,
+                                                  @PathVariable Long productId,
+                                                  @RequestParam Integer quantity) {
+        return cartService.update(cartId, productId, quantity);
     }
 }

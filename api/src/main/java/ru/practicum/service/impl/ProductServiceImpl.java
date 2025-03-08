@@ -2,9 +2,12 @@ package ru.practicum.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.practicum.entity.Product;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.mapper.ProductMapper;
@@ -12,17 +15,13 @@ import ru.practicum.repository.ProductRepository;
 import ru.practicum.response.ProductFullResponse;
 import ru.practicum.response.ProductShortResponse;
 import ru.practicum.service.ProductService;
-import ru.practicum.util.SortOrder;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.UUID;
 
-import static ru.practicum.repository.ProductSpecification.byText;
-import static ru.practicum.repository.ProductSpecification.orderBy;
 
 @Service
 @RequiredArgsConstructor
@@ -31,46 +30,67 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final DatabaseClient databaseClient;
 
     @Override
-    public List<ProductShortResponse> findAll(Integer size, String sort, String text) {
+    public Flux<ProductShortResponse> findAll(Integer size, String sort, String text) {
         log.info("Получаем список всех товаров: size = {}, sort = {}, text = {}", size, sort, text);
-        var pageable = PageRequest.of(0, size);
-        if (sort == null || sort.isBlank()) {
-            sort = "ALPHABETICAL_DESC";
+        var sqlSort = "";
+        switch (sort) {
+            case  "ALPHABETICAL_ASC" -> sqlSort = "name ASC";
+            case  "PRICE_DESC" -> sqlSort = "price DESC";
+            case  "PRICE_ASC" -> sqlSort = "price ASC";
+            case null, default -> sqlSort = "name DESC";
         }
-        SortOrder sortOrder = SortOrder.valueOf(sort);
-        var products = productRepository.findAll(byText(text).and(orderBy(sortOrder)), pageable);
-        return products.stream()
-                .map(productMapper::toShortDto)
-                .toList();
+
+        String sql = String.format("SELECT id, name, image, price FROM products" +
+                " WHERE name LIKE :text OR description LIKE :text ORDER BY %s LIMIT :size", sqlSort);
+
+        return databaseClient.sql(sql)
+                .bind("text", "%" + text + "%")
+                .bind("size", size)
+                .map((row, metadata) -> ProductShortResponse.builder()
+                        .id(row.get("id", Long.class))
+                        .name(row.get("name", String.class))
+                        .image(row.get("image", String.class))
+                        .price(row.get("price", Double.class))
+                        .build())
+                        .all()
+                .doOnError(error -> log.error("Ошибка при получении продуктов", error));
     }
 
     @Override
-    public ProductFullResponse findById(Long id) throws ProductNotFoundException {
-        log.info("Получаем товар по id {}", id);
-        return productMapper.toFullDto(productRepository.findById(id).orElseThrow(
-                () -> new ProductNotFoundException(String.format("Товара с id %s не существует", id))));
+    public Mono<ProductFullResponse> findById(Long id) throws ProductNotFoundException {
+        return productRepository.findById(id)
+                .doOnSubscribe(subscription -> log.info("Получаем товар по id {}", id))
+                .switchIfEmpty(Mono.error(new ProductNotFoundException(String.format("Товара с id %s не существует", id))))
+                .map(productMapper::toFullDto)
+                .doOnSuccess(response -> log.info("Товар по id {} успешно получен", id))
+                .doOnError(error -> log.error("Ошибка при получении товара по id {}", id, error));
     }
 
     @Override
-    public ProductFullResponse addProduct(String name, String description, Double price, MultipartFile image) throws IOException {
-        String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+    public Mono<ProductFullResponse> addProduct(String name, String description, Double price, FilePart image) {
+        String fileName = UUID.randomUUID() + "_" + image.filename();
         Path filePath = Paths.get("uploads/images/" + fileName);
 
-        Files.createDirectories(filePath.getParent());
-        Files.write(filePath, image.getBytes());
-
-        String imageUrl = "/images/" + fileName;
-
-        var product = Product.builder()
-                .name(name)
-                .description(description)
-                .price(price)
-                .image(imageUrl)
-                .build();
-
-        productRepository.save(product);
-        return productMapper.toFullDto(product);
+        return Mono.fromCallable(() -> {
+                    Files.createDirectories(filePath.getParent());
+                    return filePath;
+                })
+                .flatMap(image::transferTo)
+                .thenReturn("/images/" + fileName)
+                .flatMap(imageUrl -> {
+                    var product = Product.builder()
+                            .name(name)
+                            .description(description)
+                            .price(price)
+                            .image(imageUrl)
+                            .build();
+                    return productRepository.save(product);
+                })
+                .map(productMapper::toFullDto)
+                .doOnSuccess(response -> log.info("Товар успешно добавлен: {}", response))
+                .doOnError(error -> log.error("Ошибка при добавлении товара", error));
     }
 }

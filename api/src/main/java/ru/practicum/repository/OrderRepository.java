@@ -1,15 +1,17 @@
 package ru.practicum.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import reactor.core.publisher.Flux;
 import ru.practicum.entity.Order;
 import ru.practicum.response.OrderShortResponse;
 
-import java.util.List;
+public interface OrderRepository extends R2dbcRepository<Order, Long> {
 
-public interface OrderRepository extends JpaRepository<Order, Long> {
-
-    @Query("SELECT new ru.practicum.response.OrderShortResponse(o.orderId, SUM(po.product.price * po.quantity))" +
-            " FROM Order o LEFT JOIN ProductOrder po ON o.orderId = po.order.orderId GROUP BY o.orderId")
-    List<OrderShortResponse> findAllWithOrderSum();
+    @Query("SELECT o.order_id AS orderId, SUM(p.price * po.quantity) AS totalSum " +
+            "FROM orders o LEFT JOIN orders_products po ON o.order_id = po.order_id " +
+            "LEFT JOIN products p ON po.product_id = p.id " +
+            "GROUP BY o.order_id")
+    Flux<OrderShortResponse> findAllWithOrderSum();
 }

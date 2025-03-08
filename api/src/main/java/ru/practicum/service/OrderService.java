@@ -1,16 +1,16 @@
 package ru.practicum.service;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.OrderNotFoundException;
 import ru.practicum.response.OrderFullResponse;
 import ru.practicum.response.OrderShortResponse;
 
-import java.util.List;
-
 public interface OrderService {
-    List<OrderShortResponse> findAll();
+    Flux<OrderShortResponse> findAll();
 
-    OrderFullResponse findById(Long orderId) throws OrderNotFoundException;
+    Mono<OrderFullResponse> findById(Long orderId) throws OrderNotFoundException;
 
-    OrderFullResponse createOrder(Long cartId) throws CartNotFoundException;
+    Mono<OrderFullResponse> createOrder(Long cartId) throws CartNotFoundException;
 }
