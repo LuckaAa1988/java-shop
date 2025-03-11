@@ -2,6 +2,7 @@ package ru.practicum.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -58,12 +59,10 @@ public class CartServiceImpl implements CartService {
                 .bind("quantity", quantity)
                 .fetch()
                 .rowsUpdated()
-                .flatMap(rows -> {
-                    if (rows == 0) {
-                        return update(cartId, productId, quantity);
-                    }
-                    return getCart(cartId);
-                });
+                .flatMap(rows -> getCart(cartId))
+                .doOnSubscribe(subscription -> log.info("Добавляем продукт с id {} в корзину с id {}", productId, cartId))
+                .doOnSuccess(response -> log.info("Продукт с id {} в корзине по id {} успешно добавлен", productId, cartId))
+                .onErrorResume(DuplicateKeyException.class, e -> update(cartId, productId, quantity));
     }
 
     @Override
@@ -73,13 +72,18 @@ public class CartServiceImpl implements CartService {
                 .bind("productId", productId)
                 .fetch()
                 .rowsUpdated()
+                .doOnSubscribe(subscription -> log.info("Удаляем продукт с id {} в корзине с id {}", productId, cartId))
+                .doOnSuccess(response -> log.info("Продукт с id {} в корзине по id {} успешно удален", productId, cartId))
+                .doOnError(error -> log.error("Ошибка при удалении продукта с id {} из корзины по id {}", productId, cartId, error))
                 .then(getCart(cartId));
     }
 
     @Override
     public Mono<Void> deleteCart(Long cartId) {
         return productCartRepository.deleteAll()
-                .doOnSubscribe(subscription -> log.info("Удаляем все продукты в корзине с id {}", cartId));
+                .doOnSubscribe(subscription -> log.info("Удаляем все продукты в корзине с id {}", cartId))
+                .doOnSuccess(response -> log.info("Корзина по id {} успешно удалена", cartId))
+                .doOnError(error -> log.error("Ошибка при удалении корзины по id {}", cartId, error));
     }
 
     @Override
@@ -90,6 +94,9 @@ public class CartServiceImpl implements CartService {
                 .bind("quantity", quantity)
                 .fetch()
                 .rowsUpdated()
+                .doOnSubscribe(subscription -> log.info("Обнолвяем продукты в корзине с id {}", cartId))
+                .doOnSuccess(response -> log.info("Продукты в корзине по id {} успешно обновлены", cartId))
+                .doOnError(error -> log.error("Ошибка при обновлении корзины по id {}", cartId, error))
                 .then(getCart(cartId));
     }
 }

@@ -13,7 +13,7 @@ import java.io.IOException;
 public interface ProductService {
     Flux<ProductShortResponse> findAll(Integer size, String sort, String text);
 
-    Mono<ProductFullResponse> findById(Long id) throws ProductNotFoundException;
+    Mono<ProductFullResponse> findById(Long id);
 
     Mono<ProductFullResponse> addProduct(String name, String description, Double price, FilePart image) throws IOException;
 }

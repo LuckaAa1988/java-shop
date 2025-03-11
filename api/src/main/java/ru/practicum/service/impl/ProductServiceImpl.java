@@ -60,7 +60,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Mono<ProductFullResponse> findById(Long id) throws ProductNotFoundException {
+    public Mono<ProductFullResponse> findById(Long id) {
         return productRepository.findById(id)
                 .doOnSubscribe(subscription -> log.info("Получаем товар по id {}", id))
                 .switchIfEmpty(Mono.error(new ProductNotFoundException(String.format("Товара с id %s не существует", id))))

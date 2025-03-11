@@ -26,12 +26,12 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public Mono<OrderFullResponse> findById(@PathVariable Long orderId) throws OrderNotFoundException {
+    public Mono<OrderFullResponse> findById(@PathVariable Long orderId) {
         return orderService.findById(orderId);
     }
 
     @PostMapping("/cart/{cartId}")
-    public Mono<OrderFullResponse> createOrder(@PathVariable Long cartId) throws CartNotFoundException {
+    public Mono<OrderFullResponse> createOrder(@PathVariable Long cartId) {
         return orderService.createOrder(cartId);
     }
 }

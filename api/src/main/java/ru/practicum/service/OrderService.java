@@ -10,7 +10,7 @@ import ru.practicum.response.OrderShortResponse;
 public interface OrderService {
     Flux<OrderShortResponse> findAll();
 
-    Mono<OrderFullResponse> findById(Long orderId) throws OrderNotFoundException;
+    Mono<OrderFullResponse> findById(Long orderId);
 
-    Mono<OrderFullResponse> createOrder(Long cartId) throws CartNotFoundException;
+    Mono<OrderFullResponse> createOrder(Long cartId);
 }

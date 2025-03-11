@@ -37,11 +37,13 @@ public class OrderServiceImpl implements OrderService {
                         .id(row.get("orderId", Long.class))
                         .sum(row.get("totalSum", Double.class))
                         .build())
-                .all();
+                .all()
+                .doOnSubscribe(subscription -> log.info("Получаем список всех заказов"))
+                .doOnError(error -> log.error("Ошибка при получении всех заказов"));
     }
 
     @Override
-    public Mono<OrderFullResponse> findById(Long orderId) throws OrderNotFoundException {
+    public Mono<OrderFullResponse> findById(Long orderId) {
         return orderRepository.findById(orderId)
                 .doOnSubscribe(subscription -> log.info("Получаем товар по id {}", orderId))
                 .switchIfEmpty(Mono.error(new OrderNotFoundException(String.format("Заказа с id %s не существует", orderId))))
@@ -69,7 +71,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Mono<OrderFullResponse> createOrder(Long cartId) throws CartNotFoundException {
+    public Mono<OrderFullResponse> createOrder(Long cartId) {
         Mono<List<CartItem>> products = databaseClient.sql("SELECT p.id, p.name, p.image, p.price, cp.quantity FROM carts_products AS cp " +
                         "LEFT JOIN products AS p ON cp.product_id = p.id WHERE cart_id = :cartId")
                 .bind("cartId", cartId)
@@ -104,6 +106,9 @@ public class OrderServiceImpl implements OrderService {
                                     .orderId(orderId)
                                     .products(cartItems)
                                     .build()));
-                });
+                })
+                .doOnSubscribe(subscription -> log.info("Создаем заказ из корзины с id {}", cartId))
+                .doOnSuccess(response -> log.info("Заказ из корзины с id {} успешно создан", cartId))
+                .doOnError(error -> log.error("Ошибка при создании заказа из корзины с id {}", cartId, error));
     }
 }
