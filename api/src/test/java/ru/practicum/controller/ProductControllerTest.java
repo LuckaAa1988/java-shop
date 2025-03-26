@@ -8,12 +8,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import ru.practicum.App;
 import ru.practicum.controller.ProductController;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.ProductFullResponse;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import static org.mockito.Mockito.*;
 
 @WebFluxTest(ProductController.class)
+@ContextConfiguration(classes = App.class)
 public class ProductControllerTest {
 
     @MockitoBean

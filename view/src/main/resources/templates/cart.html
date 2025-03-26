@@ -69,8 +69,17 @@
         <h4>Общая сумма: <span th:text="${sum} + ' ₽'"></span></h4>
 
         <form th:action="@{/cart/checkout}" method="post">
-            <button type="submit" class="btn btn-success">Оформить заказ</button>
+            <button type="submit"
+                    class="btn btn-success"
+                    th:disabled="${balance - sum < 0}">
+                Оформить заказ
+            </button>
         </form>
+        <div th:with="insufficientFunds=${balance - sum < 0}">
+            <div th:if="${insufficientFunds}" class="badge bg-danger text-white p-1">
+                Сервис недоступен: недостаточно средств на балансе
+            </div>
+        </div>
     </div>
 </div>
 

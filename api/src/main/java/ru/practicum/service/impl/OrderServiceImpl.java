@@ -2,19 +2,19 @@ package ru.practicum.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.practicum.entity.Order;
-import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.OrderNotFoundException;
+import ru.practicum.exception.PaymentException;
 import ru.practicum.repository.*;
-import ru.practicum.response.CartItem;
-import ru.practicum.response.OrderFullResponse;
-import ru.practicum.response.OrderShortResponse;
-import ru.practicum.response.ProductShortResponse;
+import ru.practicum.response.*;
 import ru.practicum.service.OrderService;
+import ru.practicum.api.DefaultApi;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -26,8 +26,10 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final DatabaseClient databaseClient;
+    private final DefaultApi defaultApi;
 
     @Override
+    @Cacheable(value = "orders")
     public Flux<OrderShortResponse> findAll() {
         return databaseClient.sql("SELECT o.order_id AS orderId, SUM(p.price * po.quantity) AS totalSum " +
                         "FROM orders o LEFT JOIN orders_products po ON o.order_id = po.order_id " +
@@ -43,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Cacheable(value = "orders", key = "#orderId")
     public Mono<OrderFullResponse> findById(Long orderId) {
         return orderRepository.findById(orderId)
                 .doOnSubscribe(subscription -> log.info("Получаем товар по id {}", orderId))
@@ -71,6 +74,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @CachePut(value = "carts", key = "#cartId")
     public Mono<OrderFullResponse> createOrder(Long cartId) {
         Mono<List<CartItem>> products = databaseClient.sql("SELECT p.id, p.name, p.image, p.price, cp.quantity FROM carts_products AS cp " +
                         "LEFT JOIN products AS p ON cp.product_id = p.id WHERE cart_id = :cartId")
@@ -87,14 +91,21 @@ public class OrderServiceImpl implements OrderService {
                 .all()
                 .collectList();
 
+        Mono<UserResponse> user = defaultApi.getUser(1);
+
         Mono<Order> order = orderRepository.save(Order.builder().createdOn(OffsetDateTime.now()).build());
 
-        return Mono.zip(products, order)
+        return Mono.zip(products, order, user)
                 .flatMap(tuple -> {
                     List<CartItem> cartItems = tuple.getT1();
                     Order savedOrder = tuple.getT2();
                     Long orderId = savedOrder.getOrderId();
-
+                    Double balance = tuple.getT3().getBalance();
+                    Double res =  cartItems.stream()
+                            .mapToDouble(cartItem -> cartItem.getQuantity() * cartItem.getProduct().getPrice()).sum();
+                    if (balance - res < 0) {
+                        return Mono.error(new PaymentException("Недостаточно средств"));
+                    }
                     return Flux.fromIterable(cartItems)
                             .flatMap(cartItem -> databaseClient.sql("INSERT INTO orders_products (order_id, product_id, quantity) VALUES (:orderId, :productId, :quantity)")
                                     .bind("orderId", orderId)
@@ -102,6 +113,7 @@ public class OrderServiceImpl implements OrderService {
                                     .bind("quantity", cartItem.getQuantity())
                                     .fetch()
                                     .rowsUpdated())
+                            .then(defaultApi.withdraw(1, res))
                             .then(Mono.just(OrderFullResponse.builder()
                                     .orderId(orderId)
                                     .products(cartItems)

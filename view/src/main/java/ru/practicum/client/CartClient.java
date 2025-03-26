@@ -6,6 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import ru.practicum.response.CartResponse;
 import ru.practicum.response.OrderFullResponse;
+import ru.practicum.response.UserResponse;
 
 @RequiredArgsConstructor
 @Component
@@ -55,5 +56,17 @@ public class CartClient {
                 .uri("/api/carts/1/update-product/{productId}?quantity={quantity}", productId, quantity)
                 .retrieve()
                 .bodyToMono(CartResponse.class);
+    }
+
+    public Mono<Double> getBalance() {
+        return WebClient.builder()
+                .baseUrl("http://payment:9091")
+                .build()
+                .get()
+                .uri("/api/payment/users/1")
+                .retrieve()
+                .bodyToMono(UserResponse.class)
+                .map(UserResponse::getBalance)
+                .onErrorReturn(-1.00);
     }
 }

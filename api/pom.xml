@@ -23,6 +23,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>r2dbc-postgresql</artifactId>
             <version>1.0.7.RELEASE</version>
@@ -48,6 +53,12 @@
         </dependency>
 
         <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>payment</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>1.6.3</version>
@@ -58,6 +69,18 @@
             <artifactId>mapstruct-processor</artifactId>
             <version>1.6.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.codemonstur</groupId>
+            <artifactId>embedded-redis</artifactId>
+            <version>1.4.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.11.4</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -65,6 +88,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.4.2</version>
             </plugin>
 
             <plugin>
@@ -87,6 +111,36 @@
                         <arg>-parameters</arg>
                     </compilerArgs>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.12.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/api-spec.yaml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <modelPackage>ru.practicum.response</modelPackage>
+                            <invokerPackage>ru.practicum</invokerPackage>
+                            <apiPackage>ru.practicum.api</apiPackage>
+                            <configOptions>
+                                <withTests>false</withTests>
+                                <library>webclient</library>
+                                <reactive>true</reactive>
+                                <useJakartaEe>true</useJakartaEe>
+                                <openApiNullable>false</openApiNullable>
+                                <useTags>true</useTags>
+                                <serializableModel>true</serializableModel>
+                            </configOptions>
+                        </configuration>
+                        <phase>generate-sources</phase>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>

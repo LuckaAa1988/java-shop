@@ -2,6 +2,7 @@ package ru.practicum.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class ProductServiceImpl implements ProductService {
     private final DatabaseClient databaseClient;
 
     @Override
+    @Cacheable(value = "products")
     public Flux<ProductShortResponse> findAll(Integer size, String sort, String text) {
         log.info("Получаем список всех товаров: size = {}, sort = {}, text = {}", size, sort, text);
         var sqlSort = "";
@@ -60,6 +62,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "products", key = "#id")
     public Mono<ProductFullResponse> findById(Long id) {
         return productRepository.findById(id)
                 .doOnSubscribe(subscription -> log.info("Получаем товар по id {}", id))

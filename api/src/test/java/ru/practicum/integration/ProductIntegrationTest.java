@@ -1,15 +1,22 @@
 package ru.practicum.integration;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import redis.embedded.RedisServer;
+import ru.practicum.App;
+import ru.practicum.configuration.TestRedisConfiguration;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.ProductFullResponse;
 import ru.practicum.service.ProductService;
@@ -19,11 +26,29 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
+
+@SpringBootTest(classes = App.class)
+@Import(TestRedisConfiguration.class)
 public class ProductIntegrationTest {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Autowired
+    private RedisServer redisServer;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        redisServer.start();
+    }
+
+    @AfterEach
+    void end() throws IOException {
+        redisServer.stop();
+    }
 
     @Test
     void findAllWithoutSortAndTextSize10_ShouldReturnProductList() {

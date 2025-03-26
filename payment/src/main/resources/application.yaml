@@ -1,9 +1,9 @@
 server:
-  port: 9090
+  port: 9091
 spring:
   r2dbc:
-    url: r2dbc:postgresql://shop-db:5432/shop
-    username: shopuser
+    url: r2dbc:postgresql://payment-db:5432/payment
+    username: user
     password: 12345
   jpa:
     hibernate:
@@ -16,10 +16,3 @@ spring:
   sql:
     init:
       mode: always
-  data:
-    redis:
-      host: shop-redis
-      port: 6379
-  cache:
-    redis:
-      time-to-live: 60s

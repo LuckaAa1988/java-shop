@@ -64,11 +64,14 @@ public class CartViewController {
                 .map(cartItem -> cartItem.getProduct().getPrice() * cartItem.getQuantity())
                 .reduce(0.0, Double::sum);
 
-        return Mono.zip(cart, sumMono, cartItemCountMono)
+        var balance = cartClient.getBalance();
+
+        return Mono.zip(cart, sumMono, cartItemCountMono, balance)
                 .doOnNext(tuple -> {
                     model.addAttribute("cart", tuple.getT1());
                     model.addAttribute("sum", tuple.getT2());
                     model.addAttribute("cartItemCount", tuple.getT3());
+                    model.addAttribute("balance", tuple.getT4());
                 })
                 .thenReturn("cart");
     }

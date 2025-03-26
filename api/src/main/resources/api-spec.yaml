@@ -1,0 +1,56 @@
+openapi: 3.0.1
+info:
+  title: Payment API
+  description: API для оплаты товаров в магазине
+  version: 1.0-SNAPSHOT
+paths:
+  /api/payment/users/{id}:
+    get:
+      operationId: getUser
+      summary: Получить информацию о состоянии баланса по ID пользователя
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+    patch:
+      operationId: withdraw
+      summary: Списание с баланса пользователя
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: amount
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+      responses:
+        '200':
+          description: Списание произошло успешно
+components:
+  schemas:
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Test user
+        balance:
+          type: number
+          format: double
+          example: 150.00

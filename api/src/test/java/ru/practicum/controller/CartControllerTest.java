@@ -3,10 +3,11 @@ package ru.practicum.controller;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
-import ru.practicum.controller.CartController;
+import ru.practicum.App;
 import ru.practicum.exception.CartNotFoundException;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.CartResponse;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.*;
 
 
 @WebFluxTest(CartController.class)
+@ContextConfiguration(classes = App.class)
 public class CartControllerTest {
 
     @Autowired
