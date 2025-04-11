@@ -13,14 +13,14 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @GetMapping("/users/{id}")
-    public Mono<UserResponse> getBalance(@PathVariable Long id) {
-        return paymentService.findById(id);
+    @GetMapping("/users/{username}")
+    public Mono<UserResponse> getBalance(@PathVariable String username) {
+        return paymentService.findByUsername(username);
     }
 
-    @PatchMapping("/users/{id}")
-    public Mono<UserResponse> withdraw(@PathVariable Long id,
+    @PatchMapping("/users/{username}")
+    public Mono<UserResponse> withdraw(@PathVariable String username,
                                        @RequestParam Double amount) {
-        return paymentService.withdraw(id, amount);
+        return paymentService.withdraw(username, amount);
     }
 }

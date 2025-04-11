@@ -9,12 +9,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import ru.practicum.client.CartClient;
 import ru.practicum.client.ProductClient;
 import ru.practicum.response.ProductFullResponse;
+
+import java.security.Principal;
 
 @Controller
 @RequestMapping
@@ -29,9 +30,13 @@ public class ProductViewController {
     public Mono<String> indexPage(@RequestParam(name = "size", defaultValue = "10") Integer size,
                                   @RequestParam(name = "sort", required = false) String sort,
                                   @RequestParam(name = "text", required = false) String text,
+                                  ServerWebExchange exchange,
                                   Model model) {
         var products = productClient.findAll(size, sort, text).collectList();
-        var cartItemCountMono = cartClient.getCart()
+        var usernameMono = exchange.getPrincipal()
+                .map(Principal::getName)
+                .switchIfEmpty(Mono.just("empty"));
+        var cartItemCountMono = usernameMono.flatMap(cartClient::getCart)
                 .map(cart -> cart.getProducts().size());
 
         return Mono.zip(products, cartItemCountMono)
@@ -44,9 +49,13 @@ public class ProductViewController {
 
     @GetMapping("/products/{id}")
     public Mono<String> findById(@PathVariable Long id,
+                                 ServerWebExchange exchange,
                                  Model model) {
         var product = productClient.findById(id);
-        var cartItemCountMono = cartClient.getCart()
+        var usernameMono = exchange.getPrincipal()
+                .map(Principal::getName)
+                .switchIfEmpty(Mono.just("empty"));
+        var cartItemCountMono = usernameMono.flatMap(cartClient::getCart)
                 .map(cart -> cart.getProducts().size());
 
         return Mono.zip(product, cartItemCountMono)
@@ -58,8 +67,12 @@ public class ProductViewController {
     }
 
     @GetMapping("/products/add")
-    public Mono<String> addPage(Model model) {
-        var cartItemCountMono = cartClient.getCart()
+    public Mono<String> addPage(ServerWebExchange exchange,
+                                Model model) {
+        var usernameMono = exchange.getPrincipal()
+                .map(Principal::getName)
+                .switchIfEmpty(Mono.just("empty"));
+        var cartItemCountMono = usernameMono.flatMap(cartClient::getCart)
                 .map(cart -> cart.getProducts().size());
 
         return Mono.just(cartItemCountMono)

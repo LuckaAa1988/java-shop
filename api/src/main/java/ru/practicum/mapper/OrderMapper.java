@@ -2,7 +2,6 @@ package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
 import ru.practicum.entity.Order;
-import ru.practicum.entity.Product;
 import ru.practicum.entity.ProductCart;
 import ru.practicum.entity.ProductOrder;
 import ru.practicum.response.CartItem;

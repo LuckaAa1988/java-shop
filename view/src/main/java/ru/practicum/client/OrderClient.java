@@ -14,9 +14,9 @@ public class OrderClient {
 
     private final WebClient webClient;
 
-    public Flux<OrderShortResponse> findAll() {
+    public Flux<OrderShortResponse> findAllByUsername(String username) {
         return webClient.get()
-                .uri("/api/orders")
+                .uri("/api/orders/users/{username}", username)
                 .retrieve()
                 .bodyToFlux(OrderShortResponse.class);
     }

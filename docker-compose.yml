@@ -6,8 +6,12 @@ services:
     ports:
       - "9090:9090"
     depends_on:
-      - shop-db
-      - shop-redis
+      shop-db:
+        condition: service_started
+      shop-redis:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
     volumes:
       - ./uploads/images:/uploads/images
     environment:
@@ -22,7 +26,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - shop-api
+      keycloak:
+        condition: service_healthy
+      shop-api:
+        condition: service_started
   shop-db:
     container_name: api_db_container
     image: postgres:17-alpine
@@ -57,9 +64,28 @@ services:
       - "9091:9091"
     depends_on:
       - payment-db
+      - keycloak
     environment:
       - DB_NAME=payment
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=12345
       - DB_HOST=payment-db
       - DB_PORT=5432
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:26.1.3
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+    command: start-dev --import-realm
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n' >&3;if [ $? -eq 0 ]; then echo 'Healthcheck Successful';exit 0;else echo 'Healthcheck Failed';exit 1;fi;" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 4s

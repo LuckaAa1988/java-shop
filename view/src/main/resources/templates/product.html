@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Витрина товаров</title>
@@ -11,9 +12,14 @@
     <div class="container-fluid">
         <a class="navbar-brand" href="/">Магазин</a>
         <div class="d-flex">
-            <a th:href="@{/products/add}" class="btn btn-outline-secondary me-2">Добавить продукт</a>
-            <a th:href="@{/orders}" class="btn btn-outline-secondary me-2">📦 Мои заказы</a>
-            <a th:href="@{/cart}" class="btn btn-outline-primary position-relative">
+            <a th:href="@{/logout}" class="btn btn-outline-danger me-2" sec:authorize="isAuthenticated()">Выйти</a>
+            <div th:if="${#authentication == null}">
+                <a th:href="@{/login}" class="btn btn-outline-success me-2">Войти</a>
+                <a th:href="@{/registration}" class="btn btn-outline-primary">Регистрация</a>
+            </div>
+            <a th:href="@{/products/add}" class="btn btn-outline-secondary me-2" sec:authorize="isAuthenticated()">Добавить продукт</a>
+            <a th:href="@{/orders}" class="btn btn-outline-secondary me-2" sec:authorize="isAuthenticated()">📦 Мои заказы</a>
+            <a th:href="@{/cart}" class="btn btn-outline-primary position-relative" sec:authorize="isAuthenticated()">
                 🛒 Корзина
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                       th:text="${cartItemCount}">
@@ -32,13 +38,13 @@
                     <h5 class="card-title" th:text="${product.description}"></h5>
                     <p class="card-text">Цена: <span th:text="${product.price}"></span> ₽</p>
 
-                    <form th:action="@{/cart/add}" method="post">
+                    <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()">
                         <input type="hidden" name="productId" th:value="${product.id}">
                         <input type="number" name="quantity" min="1" value="1" class="form-control mb-2">
                         <button type="submit" class="btn btn-success">Добавить в корзину</button>
                     </form>
 
-                    <form th:action="@{/cart/remove}" method="post" class="mt-2">
+                    <form th:action="@{/cart/remove}" method="post" class="mt-2" sec:authorize="isAuthenticated()">
                         <input type="hidden" name="productId" th:value="${product.id}">
                         <button type="submit" class="btn btn-danger">Удалить из корзины</button>
                     </form>

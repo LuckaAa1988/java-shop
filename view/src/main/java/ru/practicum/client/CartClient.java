@@ -1,72 +1,74 @@
 package ru.practicum.client;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import ru.practicum.response.CartResponse;
 import ru.practicum.response.OrderFullResponse;
-import ru.practicum.response.UserResponse;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class CartClient {
 
     private final WebClient webClient;
 
     public Mono<CartResponse> addProductToCart(Long productId,
-                                               Integer quantity) {
+                                               Integer quantity,
+                                               String username) {
         return webClient.post()
-                .uri("/api/carts/1/add-product/{productId}?quantity={quantity}", productId, quantity)
+                .uri("/api/carts/{username}/add-product/{productId}?quantity={quantity}", username, productId, quantity)
                 .retrieve()
                 .bodyToMono(CartResponse.class);
     }
 
-    public Mono<CartResponse> removeProductFromCart(Long productId) {
+    public Mono<CartResponse> removeProductFromCart(Long productId,
+                                                    String username) {
         return webClient.delete()
-                .uri("/api/carts/1/delete-product/{productId}", productId)
+                .uri("/api/carts/{username}/delete-product/{productId}", username, productId)
                 .retrieve()
                 .bodyToMono(CartResponse.class);
     }
 
-    public Mono<CartResponse> getCart() {
+    public Mono<CartResponse> getCart(String username) {
         return webClient.get()
-                .uri("/api/carts/1")
+                .uri("/api/carts/{username}", username)
                 .retrieve()
                 .bodyToMono(CartResponse.class);
     }
 
-    public Mono<OrderFullResponse> createOrder() {
+    public Mono<OrderFullResponse> createOrder(String username) {
         return webClient.post()
-                .uri("/api/orders/cart/1")
+                .uri("/api/orders/cart/{username}", username)
                 .retrieve()
                 .bodyToMono(OrderFullResponse.class);
     }
 
-    public Mono<Void> deleteAllFromCart() {
+    public Mono<Void> deleteAllFromCart(String username) {
         return webClient.delete()
-                .uri("/api/carts/1")
+                .uri("/api/carts/{username}", username)
                 .retrieve()
                 .bodyToMono(Void.class);
     }
 
     public Mono<CartResponse> updateProductInCart(Long productId,
-                                               Integer quantity) {
+                                                  Integer quantity,
+                                                  String username) {
         return webClient.patch()
-                .uri("/api/carts/1/update-product/{productId}?quantity={quantity}", productId, quantity)
+                .uri("/api/carts/{username}/update-product/{productId}?quantity={quantity}", username, productId, quantity)
                 .retrieve()
                 .bodyToMono(CartResponse.class);
     }
 
-    public Mono<Double> getBalance() {
-        return WebClient.builder()
-                .baseUrl("http://payment:9091")
-                .build()
-                .get()
-                .uri("/api/payment/users/1")
+    public Mono<Double> getBalance(String username) {
+
+        return webClient.get()
+                .uri("/api/orders/balance-check/{username}", username)
                 .retrieve()
-                .bodyToMono(UserResponse.class)
-                .map(UserResponse::getBalance)
+                .bodyToMono(Double.class)
+                .doOnError(e -> log.info(e.getMessage()))
                 .onErrorReturn(-1.00);
     }
 }

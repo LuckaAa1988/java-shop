@@ -23,3 +23,20 @@ spring:
   cache:
     redis:
       time-to-live: 60s
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://keycloak:8080/realms/master
+        registration:
+          api:
+            provider: keycloak
+            authorizationGrantType: client_credentials
+            client-id: api-client
+            client-secret: c0BAodfWd5LDtVOd70vSz7dtegfnzhou
+            scope: profile
+            clientAuthenticationMethod: client_secret_post
+      resource-server:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/master

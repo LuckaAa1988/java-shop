@@ -1,12 +1,8 @@
 package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-import ru.practicum.exception.CartNotFoundException;
-import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.CartResponse;
 import ru.practicum.service.CartService;
 
@@ -17,33 +13,38 @@ public class CartController {
 
     private final CartService cartService;
 
-    @PostMapping("/{cartId}/add-product/{productId}")
-    public Mono<CartResponse> addProductToCart(@PathVariable Long cartId,
+    @PostMapping("/{username}/add-product/{productId}")
+    public Mono<CartResponse> addProductToCart(@PathVariable String username,
                                                @PathVariable Long productId,
                                                @RequestParam Integer quantity) {
-        return cartService.addProductToCart(cartId, productId, quantity);
+        return cartService.getCartId(username)
+                .flatMap(cartId -> cartService.addProductToCart(cartId, productId, quantity));
     }
 
-    @DeleteMapping("/{cartId}/delete-product/{productId}")
-    public Mono<CartResponse> deleteProductFromCart(@PathVariable Long cartId,
-                                                              @PathVariable Long productId) {
-        return cartService.deleteProductFromCart(cartId, productId);
+    @DeleteMapping("/{username}/delete-product/{productId}")
+    public Mono<CartResponse> deleteProductFromCart(@PathVariable String username,
+                                                    @PathVariable Long productId) {
+        return cartService.getCartId(username)
+                .flatMap(cartId -> cartService.deleteProductFromCart(cartId, productId));
     }
 
-    @GetMapping("/{cartId}")
-    public Mono<CartResponse> getCart(@PathVariable Long cartId) {
-        return cartService.getCart(cartId);
+    @GetMapping("/{username}")
+    public Mono<CartResponse> getCart(@PathVariable String username) {
+        return cartService.getCartId(username)
+                .flatMap(cartService::getCart);
     }
 
-    @DeleteMapping("/{cartId}")
-    public Mono<Void> deleteCart(@PathVariable Long cartId) {
-        return cartService.deleteCart(cartId);
+    @DeleteMapping("/{username}")
+    public Mono<Void> deleteCart(@PathVariable String username) {
+        return cartService.getCartId(username)
+                .flatMap(cartService::deleteCart);
     }
 
-    @PatchMapping("/{cartId}/update-product/{productId}")
-    public Mono<CartResponse> updateProductInCart(@PathVariable Long cartId,
+    @PatchMapping("/{username}/update-product/{productId}")
+    public Mono<CartResponse> updateProductInCart(@PathVariable String username,
                                                   @PathVariable Long productId,
                                                   @RequestParam Integer quantity) {
-        return cartService.update(cartId, productId, quantity);
+        return cartService.getCartId(username)
+                .flatMap(cartId -> cartService.update(cartId, productId, quantity));
     }
 }

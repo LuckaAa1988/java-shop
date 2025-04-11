@@ -1,6 +1,5 @@
 package ru.practicum.cache;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +8,13 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import reactor.test.StepVerifier;
+import redis.embedded.RedisServer;
 import ru.practicum.App;
+import ru.practicum.configuration.TestOathConfig;
 import ru.practicum.configuration.TestRedisConfiguration;
 import ru.practicum.repository.ProductRepository;
 import ru.practicum.response.ProductFullResponse;
 import ru.practicum.service.impl.ProductServiceImpl;
-import redis.embedded.RedisServer;
 
 import java.io.IOException;
 
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest(classes = App.class)
-@Import(TestRedisConfiguration.class)
+@Import({TestRedisConfiguration.class, TestOathConfig.class})
 public class ProductCacheTest {
 
     @Autowired

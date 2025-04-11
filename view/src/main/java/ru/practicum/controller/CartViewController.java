@@ -11,6 +11,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.practicum.client.CartClient;
 
+import java.security.Principal;
+
 
 @Controller
 @RequestMapping("/cart")
@@ -25,8 +27,10 @@ public class CartViewController {
                 .flatMap(formData -> {
                     Long productId = Long.valueOf(formData.getFirst("productId"));
                     Integer quantity = Integer.valueOf(formData.getFirst("quantity"));
-                    return cartClient.addProductToCart(productId, quantity)
-                            .thenReturn("redirect:/cart");
+                    return exchange.getPrincipal()
+                            .map(Principal::getName)
+                            .flatMap(username -> cartClient.addProductToCart(productId, quantity, username)
+                                    .thenReturn("redirect:/cart"));
                 });
     }
 
@@ -36,8 +40,10 @@ public class CartViewController {
         return exchange.getFormData()
                 .flatMap(formData -> {
                     Long productId = Long.valueOf(formData.getFirst("productId"));
-                    return cartClient.removeProductFromCart(productId)
-                            .thenReturn("redirect:/cart");
+                    return exchange.getPrincipal()
+                            .map(Principal::getName)
+                            .flatMap(username -> cartClient.removeProductFromCart(productId, username)
+                                    .thenReturn("redirect:/cart"));
                 });
     }
 
@@ -47,24 +53,30 @@ public class CartViewController {
                 .flatMap(formData -> {
                     Long productId = Long.valueOf(formData.getFirst("productId"));
                     Integer quantity = Integer.valueOf(formData.getFirst("quantity"));
-                    return cartClient.updateProductInCart(productId, quantity)
-                            .thenReturn("redirect:/cart");
+                    return exchange.getPrincipal()
+                            .map(Principal::getName)
+                            .flatMap(username -> cartClient.updateProductInCart(productId, quantity, username)
+                                    .thenReturn("redirect:/cart"));
                 });
     }
 
     @GetMapping
-    public Mono<String> cartPage(Model model) {
-        var cart = cartClient.getCart();
+    public Mono<String> cartPage(ServerWebExchange exchange,
+                                 Model model) {
+        var usernameMono = exchange.getPrincipal()
+                .map(Principal::getName);
 
-        var cartItemCountMono = cartClient.getCart()
-                .map(cartResponse -> cartResponse.getProducts().size());
+        var cart = usernameMono.flatMap(cartClient::getCart);
+
+        var cartItemCountMono = usernameMono.flatMap(username -> cartClient.getCart(username)
+                .map(cartResponse -> cartResponse.getProducts().size()));
 
         var sumMono = cart
                 .flatMapMany(cartResponse -> Flux.fromIterable(cartResponse.getProducts()))
                 .map(cartItem -> cartItem.getProduct().getPrice() * cartItem.getQuantity())
                 .reduce(0.0, Double::sum);
 
-        var balance = cartClient.getBalance();
+        var balance = usernameMono.flatMap(cartClient::getBalance);
 
         return Mono.zip(cart, sumMono, cartItemCountMono, balance)
                 .doOnNext(tuple -> {
@@ -77,10 +89,12 @@ public class CartViewController {
     }
 
     @PostMapping("/checkout")
-    public Mono<String> createOrder() {
-        return cartClient.createOrder()
-                .flatMap(order -> cartClient.deleteAllFromCart()
-                        .thenReturn(order))
-                .map(order -> "redirect:/orders/" + order.getOrderId());
+    public Mono<String> createOrder(ServerWebExchange exchange) {
+        return exchange.getPrincipal()
+                .map(Principal::getName)
+                .flatMap(username -> cartClient.createOrder(username)
+                        .flatMap(order -> cartClient.deleteAllFromCart(username)
+                                .thenReturn(order))
+                        .map(order -> "redirect:/orders/" + order.getOrderId()));
     }
 }

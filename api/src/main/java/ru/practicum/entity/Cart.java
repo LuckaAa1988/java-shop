@@ -5,7 +5,6 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 
 @Getter
@@ -19,4 +18,5 @@ public class Cart {
     @Id
     Long cartId;
     OffsetDateTime createdOn;
+    Long appUserId;
 }

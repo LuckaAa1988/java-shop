@@ -10,13 +10,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import redis.embedded.RedisServer;
 import ru.practicum.App;
 import ru.practicum.api.DefaultApi;
-import ru.practicum.configuration.TestApiConfig;
+import ru.practicum.configuration.TestOathConfig;
 import ru.practicum.configuration.TestRedisConfiguration;
 import ru.practicum.exception.OrderNotFoundException;
 import ru.practicum.exception.PaymentException;
@@ -30,13 +29,10 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static reactor.core.publisher.Mono.when;
 
 
 @SpringBootTest(classes = App.class)
-@Import(TestRedisConfiguration.class)
+@Import({TestRedisConfiguration.class, TestOathConfig.class})
 public class OrderCartIntegrationTest {
 
     @Autowired
@@ -57,8 +53,8 @@ public class OrderCartIntegrationTest {
     @BeforeEach
     void setUp() throws IOException {
         redisServer.start();
-        Mockito.when(defaultApi.getUser(1)).thenReturn(Mono.just(new UserResponse().id(1).balance(1000000.00).name("test")));
-        Mockito.when(defaultApi.withdraw(any(Integer.class), any(Double.class))).thenReturn(Mono.empty());
+        Mockito.when(defaultApi.getUser("test")).thenReturn(Mono.just(new UserResponse().id(1).balance(1000000.00).name("test")));
+        Mockito.when(defaultApi.withdraw(any(String.class), any(Double.class))).thenReturn(Mono.empty());
     }
 
 

@@ -6,10 +6,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import ru.practicum.client.CartClient;
 import ru.practicum.client.OrderClient;
 import ru.practicum.response.OrderShortResponse;
+
+import java.security.Principal;
 
 @Controller
 @RequestMapping("/orders")
@@ -20,19 +23,23 @@ public class OrderViewController {
     private final CartClient cartClient;
 
     @GetMapping
-    public Mono<String> ordersPage(Model model) {
-        var orders = orderClient.findAll();
+    public Mono<String> ordersPage(ServerWebExchange exchange,
+                                   Model model) {
+        var orders = exchange.getPrincipal()
+                .map(Principal::getName)
+                .map(orderClient::findAllByUsername);
 
-        var ordersListMono = orders.collectList();
 
-        var sumMono = orders
+        var sumMono = orders.flatMap(o -> o
                 .map(OrderShortResponse::getSum)
-                .reduce(0.0, Double::sum);
+                .reduce(0.0, Double::sum));
 
-        var cartItemCountMono = cartClient.getCart()
-                .map(cart -> cart.getProducts().size());
+        var cartItemCountMono = exchange.getPrincipal()
+                .map(Principal::getName)
+                .flatMap(username -> cartClient.getCart(username)
+                .map(cart -> cart.getProducts().size()));
 
-        return Mono.zip(ordersListMono, sumMono, cartItemCountMono)
+        return Mono.zip(orders, sumMono, cartItemCountMono)
                 .doOnNext(tuple -> {
                     model.addAttribute("orders", tuple.getT1());
                     model.addAttribute("sum", tuple.getT2());
@@ -43,10 +50,13 @@ public class OrderViewController {
 
     @GetMapping("/{orderId}")
     public Mono<String> orderPage(@PathVariable Long orderId,
+                                  ServerWebExchange exchange,
                                   Model model) {
         var order = orderClient.findById(orderId);
-        var cartItemCountMono = cartClient.getCart()
-                .map(cart -> cart.getProducts().size());
+        var cartItemCountMono = exchange.getPrincipal()
+                .map(Principal::getName)
+                .flatMap(username -> cartClient.getCart(username)
+                        .map(cart -> cart.getProducts().size()));
         return Mono.zip(order, cartItemCountMono)
                 .doOnNext(tuple -> {
                     model.addAttribute("order", tuple.getT1());

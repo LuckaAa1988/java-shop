@@ -3,20 +3,20 @@ package ru.practicum.controller;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.practicum.App;
-import ru.practicum.controller.ProductController;
+import ru.practicum.configuration.SecurityConfig;
+import ru.practicum.configuration.TestSecurityConfig;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.ProductFullResponse;
 import ru.practicum.response.ProductShortResponse;
@@ -28,6 +28,7 @@ import static org.mockito.Mockito.*;
 
 @WebFluxTest(ProductController.class)
 @ContextConfiguration(classes = App.class)
+@Import({TestSecurityConfig.class, SecurityConfig.class})
 public class ProductControllerTest {
 
     @MockitoBean
@@ -48,6 +49,7 @@ public class ProductControllerTest {
 
         webTestClient.get()
                 .uri("/api/products")
+                .headers(header -> header.setBearerAuth("mock-token"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -69,6 +71,7 @@ public class ProductControllerTest {
 
         webTestClient.get()
                 .uri("/api/products/1")
+                .headers(header -> header.setBearerAuth("mock-token"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -84,6 +87,7 @@ public class ProductControllerTest {
 
         webTestClient.get()
                 .uri("/api/products/1")
+                .headers(header -> header.setBearerAuth("mock-token"))
                 .exchange()
                 .expectStatus().isNotFound();
 
@@ -106,6 +110,7 @@ public class ProductControllerTest {
 
         webTestClient.post()
                 .uri("/api/products?name=test&description=test&price=10.0")
+                .headers(header -> header.setBearerAuth("mock-token"))
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .exchange()
@@ -121,6 +126,7 @@ public class ProductControllerTest {
 
         webTestClient.post()
                 .uri("/api/products")
+                .headers(header -> header.setBearerAuth("mock-token"))
                 .exchange()
                 .expectStatus().is4xxClientError();
     }

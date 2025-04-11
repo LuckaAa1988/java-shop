@@ -4,16 +4,16 @@ info:
   description: API для оплаты товаров в магазине
   version: 1.0-SNAPSHOT
 paths:
-  /api/payment/users/{id}:
+  /api/payment/users/{username}:
     get:
       operationId: getUser
-      summary: Получить информацию о состоянии баланса по ID пользователя
+      summary: Получить информацию о состоянии баланса по username пользователя
       parameters:
-        - name: id
+        - name: username
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         '200':
           description: Успешный ответ
@@ -25,11 +25,11 @@ paths:
       operationId: withdraw
       summary: Списание с баланса пользователя
       parameters:
-        - name: id
+        - name: username
           in: path
           required: true
           schema:
-            type: integer
+            type: string
         - name: amount
           in: query
           required: true

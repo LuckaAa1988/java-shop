@@ -1,8 +1,6 @@
 package ru.practicum.service;
 
 import reactor.core.publisher.Mono;
-import ru.practicum.exception.CartNotFoundException;
-import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.CartResponse;
 
 public interface CartService {
@@ -15,4 +13,6 @@ public interface CartService {
     Mono<Void> deleteCart(Long cartId);
 
     Mono<CartResponse> update(Long cartId, Long productId, Integer quantity);
+
+    Mono<Long> getCartId(String username);
 }

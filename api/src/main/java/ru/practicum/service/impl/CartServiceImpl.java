@@ -2,9 +2,6 @@ package ru.practicum.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
@@ -27,7 +24,6 @@ public class CartServiceImpl implements CartService {
     private final DatabaseClient databaseClient;
 
     @Override
-    @Cacheable(value = "carts", key = "#cartId")
     public Mono<CartResponse> getCart(Long cartId) {
         return cartRepository.findById(cartId)
                 .doOnSubscribe(subscription -> log.info("Получаем корзину по id {}", cartId))
@@ -56,7 +52,6 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @CachePut(value = "carts", key = "#cartId")
     public Mono<CartResponse> addProductToCart(Long cartId, Long productId, Integer quantity) {
         return databaseClient.sql("INSERT INTO carts_products (cart_id, product_id, quantity) VALUES (:cartId, :productId, :quantity)")
                 .bind("cartId", cartId)
@@ -71,7 +66,6 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @CacheEvict(value = "carts", key = "#cartId")
     public Mono<CartResponse> deleteProductFromCart(Long cartId, Long productId) {
         return databaseClient.sql("DELETE FROM carts_products AS cp WHERE cart_id = :cartId AND product_id = :productId")
                 .bind("cartId", cartId)
@@ -93,7 +87,6 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @CacheEvict(value = "carts", key = "#cartId")
     public Mono<CartResponse> update(Long cartId, Long productId, Integer quantity) {
         return databaseClient.sql("UPDATE carts_products SET quantity = :quantity WHERE (product_id = :productId AND cart_id = :cartId)")
                 .bind("cartId", cartId)
@@ -105,5 +98,11 @@ public class CartServiceImpl implements CartService {
                 .doOnSuccess(response -> log.info("Продукты в корзине по id {} успешно обновлены", cartId))
                 .doOnError(error -> log.error("Ошибка при обновлении корзины по id {}", cartId, error))
                 .then(getCart(cartId));
+    }
+
+    @Override
+    public Mono<Long> getCartId(String username) {
+        return cartRepository.findByUsername(username)
+                .switchIfEmpty(Mono.just(1L));
     }
 }

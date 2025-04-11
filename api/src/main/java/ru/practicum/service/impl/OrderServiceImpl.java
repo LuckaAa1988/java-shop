@@ -2,19 +2,19 @@ package ru.practicum.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import ru.practicum.api.DefaultApi;
+import ru.practicum.entity.AppUser;
 import ru.practicum.entity.Order;
 import ru.practicum.exception.OrderNotFoundException;
 import ru.practicum.exception.PaymentException;
-import ru.practicum.repository.*;
+import ru.practicum.repository.AppUserRepository;
+import ru.practicum.repository.OrderRepository;
 import ru.practicum.response.*;
 import ru.practicum.service.OrderService;
-import ru.practicum.api.DefaultApi;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -25,11 +25,11 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final AppUserRepository appUserRepository;
     private final DatabaseClient databaseClient;
     private final DefaultApi defaultApi;
 
     @Override
-    @Cacheable(value = "orders")
     public Flux<OrderShortResponse> findAll() {
         return databaseClient.sql("SELECT o.order_id AS orderId, SUM(p.price * po.quantity) AS totalSum " +
                         "FROM orders o LEFT JOIN orders_products po ON o.order_id = po.order_id " +
@@ -45,7 +45,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Cacheable(value = "orders", key = "#orderId")
     public Mono<OrderFullResponse> findById(Long orderId) {
         return orderRepository.findById(orderId)
                 .doOnSubscribe(subscription -> log.info("Получаем товар по id {}", orderId))
@@ -74,7 +73,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @CachePut(value = "carts", key = "#cartId")
     public Mono<OrderFullResponse> createOrder(Long cartId) {
         Mono<List<CartItem>> products = databaseClient.sql("SELECT p.id, p.name, p.image, p.price, cp.quantity FROM carts_products AS cp " +
                         "LEFT JOIN products AS p ON cp.product_id = p.id WHERE cart_id = :cartId")
@@ -91,9 +89,24 @@ public class OrderServiceImpl implements OrderService {
                 .all()
                 .collectList();
 
-        Mono<UserResponse> user = defaultApi.getUser(1);
+        Mono<AppUser> appUserMono = databaseClient.sql("SELECT au.username, au.id FROM app_users AS au " +
+                        "LEFT JOIN public.carts c on au.id = c.app_user_id WHERE c.cart_id = :cartId")
+                .bind("cartId", cartId)
+                .map((row, metadata) -> AppUser.builder()
+                        .id(row.get("id", Long.class))
+                        .username(row.get("username", String.class))
+                        .password("")
+                        .build())
+                .one();
 
-        Mono<Order> order = orderRepository.save(Order.builder().createdOn(OffsetDateTime.now()).build());
+
+        Mono<UserResponse> user = appUserMono.flatMap(appUser -> defaultApi.getUser(appUser.getUsername()));
+
+
+        Mono<Order> order = appUserMono.flatMap(appUser -> orderRepository.save(Order.builder()
+                        .appUserId(appUser.getId())
+                .createdOn(OffsetDateTime.now())
+                .build()));
 
         return Mono.zip(products, order, user)
                 .flatMap(tuple -> {
@@ -101,6 +114,7 @@ public class OrderServiceImpl implements OrderService {
                     Order savedOrder = tuple.getT2();
                     Long orderId = savedOrder.getOrderId();
                     Double balance = tuple.getT3().getBalance();
+                    String username = tuple.getT3().getName();
                     Double res =  cartItems.stream()
                             .mapToDouble(cartItem -> cartItem.getQuantity() * cartItem.getProduct().getPrice()).sum();
                     if (balance - res < 0) {
@@ -113,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
                                     .bind("quantity", cartItem.getQuantity())
                                     .fetch()
                                     .rowsUpdated())
-                            .then(defaultApi.withdraw(1, res))
+                            .then(defaultApi.withdraw(username, res))
                             .then(Mono.just(OrderFullResponse.builder()
                                     .orderId(orderId)
                                     .products(cartItems)
@@ -122,5 +136,28 @@ public class OrderServiceImpl implements OrderService {
                 .doOnSubscribe(subscription -> log.info("Создаем заказ из корзины с id {}", cartId))
                 .doOnSuccess(response -> log.info("Заказ из корзины с id {} успешно создан", cartId))
                 .doOnError(error -> log.error("Ошибка при создании заказа из корзины с id {}", cartId, error));
+    }
+
+    @Override
+    public Flux<OrderShortResponse> findAllByUsername(String username) {
+        return databaseClient.sql("SELECT o.order_id AS orderId, SUM(p.price * po.quantity) AS totalSum " +
+                        "FROM orders o LEFT JOIN orders_products po ON o.order_id = po.order_id " +
+                        "LEFT JOIN products p ON po.product_id = p.id " +
+                "LEFT JOIN app_users AS ap ON ap.id = o.app_user_id " +
+                "WHERE AP.username = :username " +
+                        "GROUP BY o.order_id")
+                .bind("username", username)
+                .map((row, metadata) -> OrderShortResponse.builder()
+                        .id(row.get("orderId", Long.class))
+                        .sum(row.get("totalSum", Double.class))
+                        .build())
+                .all()
+                .doOnSubscribe(subscription -> log.info("Получаем список всех заказов"))
+                .doOnError(error -> log.error("Ошибка при получении всех заказов"));
+    }
+
+    @Override
+    public Mono<Double> getBalance(String username) {
+        return defaultApi.getUser(username).map(UserResponse::getBalance);
     }
 }

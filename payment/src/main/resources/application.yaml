@@ -16,3 +16,8 @@ spring:
   sql:
     init:
       mode: always
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/master

@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import redis.embedded.RedisServer;
 import ru.practicum.App;
+import ru.practicum.configuration.TestOathConfig;
 import ru.practicum.configuration.TestRedisConfiguration;
 import ru.practicum.exception.ProductNotFoundException;
 import ru.practicum.response.ProductFullResponse;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @SpringBootTest(classes = App.class)
-@Import(TestRedisConfiguration.class)
+@Import({TestRedisConfiguration.class, TestOathConfig.class})
 public class ProductIntegrationTest {
 
     @Autowired

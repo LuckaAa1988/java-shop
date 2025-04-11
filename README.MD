@@ -10,7 +10,7 @@
 - **Страница заказа**: информация о совершённом заказе.
 
 ## Технологии
-- **Backend**: Spring Framework, Spring Boot, Spring Web Flux
+- **Backend**: Spring Framework, Spring Boot, Spring Web Flux, Spring Security, Keycloak
 - **Frontend**: HTML, JavaScript, Thymeleaf
 - **База данных**: PostgreSQL, H2
 - **Инструменты**: Maven, Docker, Docker Compose
@@ -34,3 +34,5 @@
 5. Перейдите в браузер по адресу:
     ```bash
     http://localhost:8080
+6. Пройдите регистрацию 
+7. Логинимся!
